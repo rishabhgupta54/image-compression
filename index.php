@@ -35,5 +35,6 @@ function image_compress($source, $destination, $quality) {
     elseif ($info['mime'] == 'image/png'):
         $image = imagecreatefrompng($source);
     endif;
+    imagejpeg($image, $destination, $quality);
     return $destination;
 }
