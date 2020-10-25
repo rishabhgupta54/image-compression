@@ -1,40 +1,51 @@
 <?php
+$raw_directory = __DIR__ . '/raw';
+$compress_directory = __DIR__ . '/compress';
 
-$dir = __DIR__; // current working directory
-$dir = $dir . '/Images/'; // Dirctory containg original photos
-$compression_directory = __DIR__ . '/Compress/'; // directory containg compressed photos
-
-if(!file_exists($compression_directory)) {
-	mkdir($compression_directory);
+if (file_exists($compress_directory) === FALSE) {
+    mkdir($compress_directory);
 }
 
-// loop through all the files in directory
-if (is_dir($dir)){
-	if ($dh = opendir($dir)){
-		while (($file = readdir($dh)) !== false){
-			if(is_dir($file)) {
-				continue;
-			}
-	  		image_compress($dir . $file, $compression_directory . $file, 70	);
-		}
-		closedir($dh);
-	}
+function get_files_in_directory($directory_path, $compress_directory) {
+    $current_raw_path = $directory_path;
+    $current_compress_path = str_replace('raw', 'compress', $directory_path);
+
+    if (file_exists($current_compress_path) === FALSE) {
+        mkdir($current_compress_path);
+    }
+
+    if (file_exists($directory_path)) {
+        if (is_dir($directory_path)) {
+            foreach (scandir($directory_path) as $file) {
+                if ($file == '.' || $file == '..') {
+                    continue;
+                }
+                if (is_dir($current_raw_path . '/' . $file)) {
+                    get_files_in_directory($current_raw_path . '/' . $file, $current_compress_path);
+                } else {
+                    image_compress($current_raw_path . '/' . $file, $current_compress_path . '/' . $file, 70);
+                }
+            }
+        }
+    }
 }
 
-// to compress the files
 function image_compress($source, $destination, $quality) {
 
     $info = getimagesize($source);
 
-    if ($info['mime'] == 'image/jpeg'): 
+    if ($info['mime'] == 'image/jpeg'):
         $image = imagecreatefromjpeg($source);
 
-    elseif ($info['mime'] == 'image/gif'): 
+    elseif ($info['mime'] == 'image/gif'):
         $image = imagecreatefromgif($source);
 
     elseif ($info['mime'] == 'image/png'):
         $image = imagecreatefrompng($source);
     endif;
     imagejpeg($image, $destination, $quality);
+
     return $destination;
 }
+
+get_files_in_directory($raw_directory, $compress_directory);
